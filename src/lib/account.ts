@@ -141,6 +141,21 @@ const AUTH_ERRORS: Record<string, Record<Locale, string>> = {
     en: 'Too many attempts. Please try again shortly.',
     ar: 'محاولات كثيرة جدًا. يرجى إعادة المحاولة بعد قليل.',
   },
+  connection: {
+    fr: 'Impossible de joindre Supabase. Vérifiez l’URL du projet et les variables configurées dans l’hébergeur.',
+    en: 'Could not reach Supabase. Check the project URL and the environment variables configured by the host.',
+    ar: 'تعذّر الاتصال بـ Supabase. تحقّق من رابط المشروع ومتغيرات البيئة لدى الاستضافة.',
+  },
+  databaseSignup: {
+    fr: 'Supabase a refusé la création du compte. Vérifiez les journaux Auth et la fonction SQL handle_new_user.',
+    en: 'Supabase could not create the account. Check the Auth logs and the handle_new_user SQL function.',
+    ar: 'تعذّر على Supabase إنشاء الحساب. تحقّق من سجلات المصادقة ودالة SQL المسماة handle_new_user.',
+  },
+  signupDisabled: {
+    fr: 'Les inscriptions sont désactivées dans Supabase pour le moment.',
+    en: 'Sign-ups are currently disabled in Supabase.',
+    ar: 'التسجيل معطّل حاليًا في Supabase.',
+  },
   generic: {
     fr: 'Une erreur est survenue. Réessayez.',
     en: 'Something went wrong. Please try again.',
@@ -162,6 +177,12 @@ export function authErrorFr(message: string, locale: Locale = 'fr'): string {
             ? 'confirmEmail'
             : m.includes('rate limit') || m.includes('too many')
               ? 'rateLimit'
-              : 'generic'
+              : m.includes('failed to fetch') || m.includes('fetch failed') || m.includes('networkerror') || m.includes('network request failed') || m.includes('err_name_not_resolved') || m.includes('load failed')
+                ? 'connection'
+                : m.includes('database error saving new user') || m.includes('database error')
+                  ? 'databaseSignup'
+                  : m.includes('signups not allowed') || m.includes('signup is disabled')
+                    ? 'signupDisabled'
+                    : 'generic'
   return AUTH_ERRORS[key][locale]
 }

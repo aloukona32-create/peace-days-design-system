@@ -172,6 +172,7 @@ export default function Inscription() {
       if (needsConfirmation) setDone(true)
       else navigate('/compte', { replace: true })
     } catch (err) {
+      console.error('[inscription] Échec de création du compte Supabase:', err)
       setError(authErrorFr(err instanceof Error ? err.message : '', locale))
     } finally {
       setBusy(false)

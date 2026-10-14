@@ -18,8 +18,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      VITE_SUPABASE_URL: https://cewsmtopclzdtryzfzqg.supabase.co
-      VITE_SUPABASE_ANON_KEY: sb_publishable_sWlDX-fHa9inVfEvTaCeng_81yze8KE
+      VITE_BASE_PATH: /peace-days-design-system/
+      VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -35,6 +36,16 @@ jobs:
 
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+
+      - name: Check Supabase configuration
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+            echo "::error::Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY as repository Actions secrets."
+            exit 1
+          fi
 
       - name: Build site
         run: npm run build
