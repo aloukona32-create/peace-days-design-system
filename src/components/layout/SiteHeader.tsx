@@ -176,8 +176,8 @@ export function SiteHeader() {
                 >
                   <LogIn className="h-4 w-4" /> {t('header.login')}
                 </Link>
-                <Magnetic className="hidden sm:inline-flex">
-                  <GoldButton to="/inscription" size="sm">
+                <Magnetic className="hidden shrink-0 sm:inline-flex">
+                  <GoldButton to="/inscription" size="sm" className="shrink-0 whitespace-nowrap">
                     <UserPlus className="h-4 w-4" /> {t('header.signup')}
                   </GoldButton>
                 </Magnetic>
