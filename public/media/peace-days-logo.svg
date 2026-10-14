@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Peace Days International">
+  <title>Peace Days International</title>
+  <defs>
+    <!-- Or métallique « champagne » : même famille que pd-gold (#C9A227) du design system. -->
+    <linearGradient id="pd-gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8A6E1E" />
+      <stop offset="0.22" stop-color="#E7C86B" />
+      <stop offset="0.5" stop-color="#C9A227" />
+      <stop offset="0.78" stop-color="#E7C86B" />
+      <stop offset="1" stop-color="#8A6E1E" />
+    </linearGradient>
+    <linearGradient id="pd-gold-soft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E3C069" />
+      <stop offset="1" stop-color="#B08F2A" />
+    </linearGradient>
+    <!-- Bleu nuit du globe : aligne sur la variable CSS pd-night (8 14 26). -->
+    <radialGradient id="pd-sea" cx="0.38" cy="0.3" r="0.85">
+      <stop offset="0" stop-color="#1E3A6E" />
+      <stop offset="0.6" stop-color="#14264C" />
+      <stop offset="1" stop-color="#0A1330" />
+    </radialGradient>
+    <clipPath id="pd-globe-clip">
+      <circle cx="512" cy="495" r="272" />
+    </clipPath>
+    <!-- Arcs de texte non ambigus : chaque demi-cercle a une corde egale au
+         diametre (2 x 400), donc le centre est impose a (512 512) par le
+         navigateur. Balayage 1 = sens horaire (haut, lu de gauche a droite),
+         balayage 0 = sens antihoraire (bas, lu de gauche a droite aussi). -->
+    <path id="pd-arc-top" d="M 112 512 A 400 400 0 0 1 912 512" />
+    <path id="pd-arc-bottom" d="M 112 512 A 400 400 0 0 0 912 512" />
+    <!-- Feuille de laurier, base à l'origine, pointe vers +x. -->
+    <path id="pd-leaf" d="M 0 0 C 12 -15 35 -17 46 -6 C 35 9 12 13 0 0 Z" />
+  </defs>
+
+  <!-- Fond ivoire du sceau -->
+  <circle cx="512" cy="512" r="500" fill="#FBF8F2" />
+
+  <!-- Anneau or extérieur -->
+  <circle cx="512" cy="512" r="497" fill="none" stroke="url(#pd-gold)" stroke-width="5" />
+  <circle cx="512" cy="512" r="486" fill="none" stroke="url(#pd-gold-soft)" stroke-width="17" />
+  <circle cx="512" cy="512" r="474" fill="none" stroke="url(#pd-gold)" stroke-width="2.5" />
+  <!-- Filet intérieur séparant le texte des motifs -->
+  <circle cx="512" cy="512" r="318" fill="none" stroke="url(#pd-gold-soft)" stroke-width="3" />
+
+  <!-- Texte circulaire -->
+  <g fill="#1B2E63" font-family="Georgia, 'Times New Roman', serif" font-weight="700">
+    <text font-size="80" letter-spacing="16">
+      <textPath href="#pd-arc-top" startOffset="50%" text-anchor="middle">PEACE DAYS</textPath>
+    </text>
+    <text font-size="62" letter-spacing="11">
+      <textPath href="#pd-arc-bottom" startOffset="50%" text-anchor="middle">INTERNATIONAL</textPath>
+    </text>
+  </g>
+  <!-- Points séparateurs -->
+  <circle cx="112" cy="512" r="8" fill="url(#pd-gold-soft)" />
+  <circle cx="912" cy="512" r="8" fill="url(#pd-gold-soft)" />
+
+  <!-- Lauriers (gauche ; le second est le miroir) -->
+  <g id="pd-laurel" fill="url(#pd-gold-soft)">
+    <path d="M 168 660 C 138 570 138 470 176 396" fill="none" stroke="url(#pd-gold-soft)" stroke-width="6" stroke-linecap="round" />
+    <use href="#pd-leaf" transform="translate(162 626) rotate(188) scale(0.82)" />
+    <use href="#pd-leaf" transform="translate(180 630) rotate(196) scale(0.6)" />
+    <use href="#pd-leaf" transform="translate(148 574) rotate(193) scale(0.85)" />
+    <use href="#pd-leaf" transform="translate(168 578) rotate(201) scale(0.62)" />
+    <use href="#pd-leaf" transform="translate(141 520) rotate(198) scale(0.86)" />
+    <use href="#pd-leaf" transform="translate(161 524) rotate(206) scale(0.63)" />
+    <use href="#pd-leaf" transform="translate(142 468) rotate(203) scale(0.84)" />
+    <use href="#pd-leaf" transform="translate(162 472) rotate(211) scale(0.6)" />
+    <use href="#pd-leaf" transform="translate(152 420) rotate(210) scale(0.8)" />
+    <use href="#pd-leaf" transform="translate(174 424) rotate(218) scale(0.57)" />
+  </g>
+  <use href="#pd-laurel" transform="translate(1024 0) scale(-1 1)" />
+  <!-- Globe -->
+  <circle cx="512" cy="495" r="272" fill="url(#pd-sea)" />
+  <g clip-path="url(#pd-globe-clip)">
+    <!-- Continents (or) -->
+    <g fill="url(#pd-gold-soft)">
+      <path d="M 402 375 L 442 345 L 492 335 L 532 345 L 557 375 L 542 400 L 502 410 L 457 405 L 417 395 Z" />
+      <path d="M 417 475 L 452 450 L 502 445 L 537 460 L 572 485 L 582 525 L 567 565 L 542 605 L 522 645 L 497 670 L 467 655 L 442 615 L 427 570 L 412 525 Z" />
+      <path d="M 572 355 L 642 330 L 722 345 L 777 385 L 787 445 L 752 485 L 712 505 L 672 485 L 632 455 L 592 435 L 567 395 Z" />
+      <path d="M 700 560 L 748 566 L 772 600 L 754 632 L 712 634 L 690 604 Z" />
+    </g>
+    <!-- Filaire méridiens / parallèles -->
+    <g fill="none" stroke="#E3C069" stroke-width="2.4" opacity="0.6">
+      <ellipse cx="512" cy="495" rx="272" ry="272" />
+      <ellipse cx="512" cy="495" rx="210" ry="272" />
+      <ellipse cx="512" cy="495" rx="140" ry="272" />
+      <ellipse cx="512" cy="495" rx="68" ry="272" />
+      <line x1="512" y1="223" x2="512" y2="767" />
+      <ellipse cx="512" cy="495" rx="272" ry="49" />
+      <ellipse cx="512" cy="425" rx="263" ry="47" />
+      <ellipse cx="512" cy="355" rx="233" ry="42" />
+      <ellipse cx="512" cy="295" rx="184" ry="33" />
+      <ellipse cx="512" cy="565" rx="263" ry="47" />
+      <ellipse cx="512" cy="635" rx="233" ry="42" />
+      <ellipse cx="512" cy="695" rx="184" ry="33" />
+    </g>
+  </g>
+  <circle cx="512" cy="495" r="272" fill="none" stroke="url(#pd-gold-soft)" stroke-width="4" />
+
+  <!-- Rubans or & nuit (vagues stylisees, sous la colombe) -->
+  <path d="M 268 706 C 350 676 434 712 520 698 C 596 686 656 656 700 632 L 682 668 C 636 696 590 720 522 732 C 444 746 356 720 284 740 Z" fill="url(#pd-gold-soft)" />
+  <path d="M 258 748 C 348 720 438 754 528 740 C 606 728 676 698 736 668 L 718 710 C 660 740 606 764 526 778 C 438 792 348 764 268 786 Z" fill="#14264C" />
+
+  <!-- Colombe blanche portant un rameau d'olivier -->
+  <g transform="translate(520 505)">
+    <!-- aile : silhouette large, pointe haute a gauche -->
+    <path d="M 70 -34 C 34 -62 -6 -98 -50 -128 C -80 -149 -112 -170 -140 -185 C -156 -194 -170 -186 -166 -172 C -158 -146 -146 -118 -128 -94 C -100 -58 -66 -24 -26 -2 C 4 12 54 6 70 -34 Z" fill="#FFFFFF" />
+    <!-- plumes secondaires (decalque interne plus clair) -->
+    <path d="M 32 -6 C 4 -30 -30 -64 -70 -94 C -94 -112 -114 -128 -130 -140 C -142 -150 -154 -142 -150 -130 C -142 -110 -130 -90 -114 -72 C -88 -44 -56 -18 -20 4 C -4 10 22 8 32 -6 Z" fill="#F1F5FC" />
+    <!-- separations de remiges -->
+    <g fill="none" stroke="#9FB3D9" stroke-width="2.4" opacity="0.7" stroke-linecap="round">
+      <path d="M -158 -180 C -146 -156 -130 -130 -110 -106" />
+      <path d="M -112 -118 C -94 -94 -72 -70 -48 -50" />
+      <path d="M -140 -142 C -124 -120 -104 -100 -84 -80" />
+    </g>
+    <!-- queue (fanion vers la gauche) -->
+    <path d="M -100 12 C -150 22 -192 42 -224 68 C -190 68 -154 58 -124 44 C -108 36 -94 20 -100 12 Z" fill="#F1F5FC" />
+    <path d="M -96 -6 C -142 -4 -184 8 -218 26 C -182 30 -146 24 -116 14 C -100 9 -90 0 -96 -6 Z" fill="#FFFFFF" />
+    <!-- corps fusele, tete a droite -->
+    <path d="M 150 -8 C 142 -30 122 -44 100 -42 C 82 -40 68 -30 58 -14 C 46 6 22 22 -14 32 C -56 44 -104 56 -146 68 C -178 77 -204 86 -220 96 C -198 95 -172 90 -148 83 C -110 71 -70 60 -28 48 C 10 38 46 28 78 20 C 110 12 140 8 150 -8 Z" fill="#FFFFFF" />
+    <!-- ombre du corps -->
+    <path d="M 78 20 C 46 28 10 38 -28 48 C -70 60 -110 71 -148 83 C -172 90 -198 95 -220 96 C -204 86 -178 77 -146 68 C -104 56 -56 44 -14 32 C 22 22 46 6 58 -14 C 64 -4 70 10 78 20 Z" fill="#E4EBF7" />
+    <!-- bec -->
+    <path d="M 146 -20 L 188 -10 L 144 2 Z" fill="#D9B14A" />
+    <!-- oeil -->
+    <circle cx="130" cy="-24" r="5" fill="#1B2E63" />
+    <!-- rameau d'olivier dans le bec -->
+    <g>
+      <path d="M 172 -12 C 198 -28 220 -36 242 -36" fill="none" stroke="#5F8A3C" stroke-width="6" stroke-linecap="round" />
+      <ellipse cx="196" cy="-19" rx="16" ry="7" fill="#6FA348" transform="rotate(-28 196 -19)" />
+      <ellipse cx="216" cy="-30" rx="15" ry="6.5" fill="#5F8A3C" transform="rotate(12 216 -30)" />
+      <ellipse cx="234" cy="-36" rx="14" ry="6" fill="#6FA348" transform="rotate(-12 234 -36)" />
+      <ellipse cx="204" cy="-7" rx="12" ry="5" fill="#5F8A3C" transform="rotate(16 204 -7)" />
+    </g>
+  </g>
+</svg>

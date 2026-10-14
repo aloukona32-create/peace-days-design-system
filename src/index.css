@@ -1,0 +1,228 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --pd-header-h: 76px;
+
+  /* Fond « nuit » par défaut — bleu nuit du cahier des charges (#080E1A). */
+  --pd-night: 8 14 26;
+  --pd-night-2: 13 22 38;
+  --pd-night-3: 19 33 53;
+  --pd-night-4: 27 44 69;
+
+  /* Premier plan (texte) par défaut — clair sur fond nuit. */
+  --pd-sand: 236 228 210;
+  --pd-sand-dim: 185 178 159;
+  --pd-gold-soft: 217 190 122;
+}
+
+/* ============================================================
+   BANC D'ESSAI COULEURS DE FOND (temporaire)
+   Chaque thème redéfinit la rampe « nuit » (4 niveaux) mixée à l'or.
+   Le sélecteur flottant (ThemeLab) pose data-theme sur <html>.
+   « nuit » = valeur de référence à restaurer si besoin.
+   ============================================================ */
+[data-theme='nuit'] {
+  --pd-night: 8 14 26;
+  --pd-night-2: 13 22 38;
+  --pd-night-3: 19 33 53;
+  --pd-night-4: 27 44 69;
+}
+[data-theme='indigo'] {
+  --pd-night: 10 10 30;
+  --pd-night-2: 18 18 46;
+  --pd-night-3: 27 27 64;
+  --pd-night-4: 39 39 90;
+}
+[data-theme='aubergine'] {
+  --pd-night: 18 10 27;
+  --pd-night-2: 28 16 42;
+  --pd-night-3: 40 23 58;
+  --pd-night-4: 58 34 80;
+}
+[data-theme='sarcelle'] {
+  --pd-night: 5 19 26;
+  --pd-night-2: 10 31 41;
+  --pd-night-3: 16 45 59;
+  --pd-night-4: 26 66 84;
+}
+[data-theme='emeraude'] {
+  --pd-night: 7 20 15;
+  --pd-night-2: 12 30 23;
+  --pd-night-3: 18 43 33;
+  --pd-night-4: 27 62 48;
+}
+[data-theme='bordeaux'] {
+  --pd-night: 22 9 12;
+  --pd-night-2: 33 14 18;
+  --pd-night-3: 46 20 26;
+  --pd-night-4: 66 29 38;
+}
+[data-theme='espresso'] {
+  --pd-night: 21 14 8;
+  --pd-night-2: 32 22 13;
+  --pd-night-3: 44 31 20;
+  --pd-night-4: 62 45 30;
+}
+/* Thème clair « Ivoire » — écart assumé du « Nuit & Or ».
+   Bascule aussi le premier plan (texte foncé) et les gris de surface. */
+[data-theme='ivoire'] {
+  color-scheme: light;
+  --pd-night: 250 248 242; /* fond ivoire */
+  --pd-night-2: 244 240 231; /* cartes */
+  --pd-night-3: 235 229 216; /* champs */
+  --pd-night-4: 222 212 192; /* survols, bordures */
+  --pd-sand: 26 21 12; /* texte principal (encre) */
+  --pd-sand-dim: 92 84 66; /* texte secondaire */
+  --pd-gold-soft: 150 118 34; /* or profond lisible sur clair */
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body {
+  @apply bg-pd-night text-pd-sand;
+}
+
+body {
+  font-family: theme('fontFamily.sans');
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: theme('fontFamily.display');
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: rgba(201, 162, 39, 0.28);
+  color: #faf7f0;
+}
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgb(var(--pd-night));
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--pd-night-4));
+  border: 2px solid rgb(var(--pd-night));
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7c6a38;
+}
+
+@layer components {
+  /* Libellé « eyebrow » institutionnel */
+  .eyebrow {
+    @apply inline-flex items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-label text-pd-gold-soft;
+  }
+  .eyebrow::before {
+    content: '';
+    @apply h-px w-8 bg-pd-gold/70;
+  }
+
+  /* Texte or « feuille d'or » */
+  .text-gold-sheen {
+    @apply bg-gold-sheen bg-clip-text text-transparent;
+    background-size: 200% 100%;
+  }
+
+  /* Conteneur éditorial */
+  .container-pd {
+    @apply mx-auto w-full max-w-7xl px-6 sm:px-8 lg:px-12;
+  }
+
+  /* Filet doré fin */
+  .hairline {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-pd-gold-muted/60 to-transparent;
+  }
+}
+
+@layer utilities {
+  .bg-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  }
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent);
+    mask-image: linear-gradient(180deg, #000 60%, transparent);
+  }
+  .[perspective] {
+    perspective: 1000px;
+  }
+}
+
+/* Respect de la préférence système */
+@media (prefers-reduced-motion: reduce) {
+  html.lenis {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   RTL / Arabe
+   L'arabe bascule <html dir="rtl" lang="ar"> (voir LocaleProvider).
+   Le flux flex/grid s'inverse automatiquement. On corrige ici ce qui
+   ne doit PAS s'appliquer à l'écriture arabe :
+   - l'interlettrage (letter-spacing) casse la liaison cursive ;
+   - les capitales (uppercase) n'existent pas en arabe ;
+   et on fournit une pile de polices arabes lisibles.
+   ============================================================ */
+:root[lang='ar'] body {
+  font-family: 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', Tahoma, system-ui, sans-serif;
+}
+:root[lang='ar'] h1,
+:root[lang='ar'] h2,
+:root[lang='ar'] h3,
+:root[lang='ar'] h4 {
+  font-family: 'Noto Kufi Arabic', 'Noto Naskh Arabic', 'Geeza Pro', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+:root[lang='ar'] *,
+:root[lang='ar'] *::before,
+:root[lang='ar'] *::after {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* Alignements logiques : on inverse les alignements physiques explicites. */
+:root[dir='rtl'] .text-left {
+  text-align: right;
+}
+:root[dir='rtl'] .text-right {
+  text-align: left;
+}
