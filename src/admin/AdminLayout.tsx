@@ -9,11 +9,9 @@ import {
   Mail,
   CalendarDays,
   Settings,
-  Bell,
   Menu,
   LogOut,
   ArrowUpRight,
-  Search,
   Inbox,
 } from 'lucide-react'
 import { cn } from '../lib/utils'
@@ -162,23 +160,7 @@ export default function AdminLayout() {
               <Menu className="h-[18px] w-[18px]" />
             </button>
 
-            <div className="relative hidden max-w-sm flex-1 sm:block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-pd-sand-dim" />
-              <input
-                placeholder="Rechercher dans le back-office…"
-                className="h-10 w-full rounded-xl border border-white/10 bg-white/5 pl-9 pr-3 text-sm text-pd-sand placeholder:text-pd-sand-dim/70 focus:border-pd-gold-bright/50 focus:outline-none focus:ring-1 focus:ring-pd-gold-bright/40"
-              />
-            </div>
-
             <div className="ml-auto flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="Notifications"
-                className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-pd-sand-dim transition-colors hover:text-pd-sand"
-              >
-                <Bell className="h-[18px] w-[18px]" />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-pd-gold-bright ring-2 ring-pd-night" />
-              </button>
               <div className="ml-1 hidden items-center gap-3 border-l border-white/10 pl-3 sm:flex">
                 <Avatar name={displayName} />
                 <span className="leading-tight">

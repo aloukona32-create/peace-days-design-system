@@ -1,8 +1,10 @@
 -- ============================================================
 --  Peace Days Dubaï 2027 — Données de démonstration (seed)
 --
---  À exécuter APRÈS schema.sql, dans Supabase → SQL Editor.
+--  À exécuter APRÈS schema.sql et 02_comptes.sql, dans Supabase → SQL Editor.
 --  Réexécutable : `on conflict do nothing` évite les doublons.
+--  Aucun compte admin de démonstration n'est créé : activez `profiles.is_admin`
+--  uniquement pour un compte Auth réel et autorisé.
 --  (Les apostrophes du texte sont typographiques « ’ » : aucun
 --   échappement de quote SQL n'est nécessaire.)
 -- ============================================================

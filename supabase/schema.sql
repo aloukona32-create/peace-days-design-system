@@ -3,7 +3,10 @@
 --
 --  À exécuter dans : Supabase → SQL Editor → New query → Run.
 --  Le public soumet via les formulaires + lit les engagements publiés ;
---  seuls les admins (table `admins`) lisent le privé et changent les statuts.
+--  seuls les admins lisent le privé et changent les statuts. Exécuter aussi
+--  02_comptes.sql : il migre l'ancienne liste `admins` vers `profiles.is_admin`
+--  puis supprime cette table de compatibilité. Exécuter 04_admin_content.sql
+--  pour ajouter les paramètres de l'événement et le programme modifiable.
 -- ============================================================
 
 -- ---- Extensions ----
@@ -16,21 +19,38 @@ create sequence if not exists reservations_seq start 93;
 create sequence if not exists partenaires_seq start 55;
 create sequence if not exists abonnes_seq start 1288;
 
--- ---- Administrateurs (allowlist) ----
-create table if not exists public.admins (
-  user_id uuid primary key references auth.users (id) on delete cascade,
-  email text,
-  added_at timestamptz not null default now()
-);
-
+-- `02_comptes.sql` définira l'autorité finale via profiles.is_admin.
+-- Cette fonction transitoire préserve les anciens déploiements pendant la
+-- migration, sans créer de table admins sur une nouvelle installation.
 create or replace function public.is_admin()
 returns boolean
-language sql
+language plpgsql
 stable
 security definer
 set search_path = public
 as $$
-  select exists (select 1 from public.admins where user_id = auth.uid());
+declare
+  profile_is_admin boolean;
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'profiles'
+      and column_name = 'is_admin'
+  ) then
+    execute 'select coalesce((select is_admin from public.profiles where id = $1), false)'
+      into profile_is_admin using auth.uid();
+    return profile_is_admin;
+  end if;
+
+  if to_regclass('public.admins') is not null then
+    execute 'select exists (select 1 from public.admins where user_id = $1)'
+      into profile_is_admin using auth.uid();
+    return profile_is_admin;
+  end if;
+
+  return false;
+end;
 $$;
 
 -- ---- Tables métier ----
@@ -98,7 +118,6 @@ create index if not exists partenaires_soumis_le_idx  on public.partenaires  (so
 create index if not exists abonnes_inscrit_le_idx     on public.abonnes      (inscrit_le desc);
 
 -- ---- RLS : activation sur toutes les tables ----
-alter table public.admins       enable row level security;
 alter table public.engagements  enable row level security;
 alter table public.candidatures enable row level security;
 alter table public.reservations enable row level security;
@@ -119,18 +138,12 @@ grant insert          on public.partenaires  to anon, authenticated;
 grant select, update, delete on public.partenaires  to authenticated;
 grant insert          on public.abonnes      to anon, authenticated;
 grant select, update, delete on public.abonnes      to authenticated;
-grant select          on public.admins       to authenticated;
 -- ============================================================
 --  Policies
 --  Convention : anon (public) peut soumettre et lire le strict nécessaire ;
 --  is_admin() ouvre tout le reste. On DROP avant CREATE pour réexécuter le
 --  script sans erreur.
 -- ============================================================
-
--- admins : consultable uniquement par les admins eux-mêmes
-drop policy if exists admins_select on public.admins;
-create policy admins_select on public.admins
-  for select to authenticated using (public.is_admin());
 
 -- engagements : le public lit les publiés + soumet en 'en_attente' ; admin = tout
 drop policy if exists engagements_read on public.engagements;
@@ -226,10 +239,7 @@ create policy abonnes_delete on public.abonnes
   for delete to authenticated using (public.is_admin());
 
 -- ============================================================
---  Bootstrap admin (À FAIRE UNE FOIS, après avoir créé le compte)
---  1. Auth → Users → Add user → renseigner l'email + mot de passe de l'admin.
---  2. Copier son UID, puis exécuter (en remplaçant les valeurs) :
---       insert into public.admins (user_id, email)
---       values ('COLLER-UID-ICI', 'admin@exemple.com');
---  Sans cette ligne, aucun compte n'a accès aux données privées.
+--  Bootstrap admin : après avoir créé le compte Auth ET exécuté
+--  02_comptes.sql, activer `is_admin` sur son profil depuis le SQL Editor.
+--  Voir le README pour la requête de promotion.
 -- ============================================================

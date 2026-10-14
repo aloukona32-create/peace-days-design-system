@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import type { SessionType } from '../lib/content'
 import { useContent } from '../i18n/content'
@@ -7,6 +7,7 @@ import { img, PHOTOS } from '../lib/images'
 import { Reveal, TextReveal, ParallaxImage } from '../components/motion'
 import { Section, CTASection } from '../components/site'
 import { cn } from '../lib/utils'
+import { getProgram, type AdminProgramDay } from '../lib/program'
 
 const COPY = {
   fr: {
@@ -48,6 +49,26 @@ export default function Programme() {
   const { locale } = useT()
   const c = COPY[locale]
   const [filter, setFilter] = useState<SessionType | 'tous'>('tous')
+  const [program, setProgram] = useState<AdminProgramDay[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    getProgram()
+      .then((data) => {
+        if (active) setProgram(data)
+      })
+      .catch((cause: unknown) => {
+        if (active) setError(cause instanceof Error ? cause.message : 'Impossible de charger le programme.')
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
 
   const TYPE_LABEL = Object.fromEntries(
     SESSION_TYPES.map((t) => [t.key, t.label]),
@@ -55,11 +76,11 @@ export default function Programme() {
 
   const days = useMemo(
     () =>
-      PROGRAM.map((d) => ({
+      program.map((d) => ({
         ...d,
         sessions: filter === 'tous' ? d.sessions : d.sessions.filter((s) => s.type === filter),
       })).filter((d) => d.sessions.length > 0),
-    [filter, PROGRAM],
+    [filter, program],
   )
 
   return (
@@ -108,6 +129,15 @@ export default function Programme() {
         </div>
 
         {/* Timeline par jour */}
+        {loading ? (
+          <p role="status" className="py-12 text-center text-sm text-pd-sand-dim">Chargement du programme…</p>
+        ) : error ? (
+          <p role="alert" className="rounded-xl border border-pd-rose/40 bg-pd-rose/10 p-5 text-sm text-[#e08a83]">
+            Impossible de charger le programme : {error}
+          </p>
+        ) : days.length === 0 ? (
+          <p className="py-12 text-center text-sm text-pd-sand-dim">Le programme sera publié prochainement.</p>
+        ) : (
         <div className="space-y-16">
           {days.map((day) => (
             <motion.div
@@ -118,7 +148,7 @@ export default function Programme() {
               <div className="lg:sticky lg:top-40 lg:self-start">
                 <span className="font-display text-6xl font-semibold text-gold-sheen">{day.day}</span>
                 <p className="mt-1 text-sm font-semibold uppercase tracking-wide text-pd-sand-dim">
-                  {day.weekday} · {c.month}
+                  {day.weekday} · {day.label || c.month}
                 </p>
               </div>
               <div className="space-y-4">
@@ -142,6 +172,7 @@ export default function Programme() {
             </motion.div>
           ))}
         </div>
+        )}
       </Section>
 
       {/* ============ CTA ============ */}

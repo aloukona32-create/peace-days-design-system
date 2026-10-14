@@ -18,6 +18,7 @@ import {
   DonutChart,
   PageHeader,
   StatusPill,
+  LoadingState,
 } from '../components'
 import {
   getEngagements,
@@ -33,7 +34,8 @@ import {
   type Kpi,
   type ActiviteType,
 } from '../data'
-import { EXPERIENCES } from '../../lib/content'
+import { getProgram } from '../../lib/program'
+import { useContent } from '../../i18n/content'
 import { cn } from '../../lib/utils'
 import { useAsyncRows } from '../useAsyncRows'
 
@@ -76,14 +78,34 @@ function StatCard({ kpi }: { kpi: Kpi }) {
   )
 }
 export default function Dashboard() {
-  // Toutes les lignes réelles (Supabase). Les indicateurs sont dérivés d'elles ;
-  // aucune valeur n'est codée en dur.
-  const { rows: engagements } = useAsyncRows(getEngagements)
-  const { rows: candidatures } = useAsyncRows(getCandidatures)
-  const { rows: reservations } = useAsyncRows(getReservations)
-  const { rows: partenaires } = useAsyncRows(getPartenaires)
-  const { rows: abonnes } = useAsyncRows(getAbonnes)
-  const { rows: pageViews } = useAsyncRows(() => getPageViews(30))
+  const { EVENT } = useContent()
+  const engagementsState = useAsyncRows(getEngagements)
+  const candidaturesState = useAsyncRows(getCandidatures)
+  const reservationsState = useAsyncRows(getReservations)
+  const partenairesState = useAsyncRows(getPartenaires)
+  const abonnesState = useAsyncRows(getAbonnes)
+  const pageViewsState = useAsyncRows(() => getPageViews(30))
+  const programState = useAsyncRows(getProgram)
+  const { rows: engagements } = engagementsState
+  const { rows: candidatures } = candidaturesState
+  const { rows: reservations } = reservationsState
+  const { rows: partenaires } = partenairesState
+  const { rows: abonnes } = abonnesState
+  const { rows: pageViews } = pageViewsState
+  const { rows: program } = programState
+
+  const sources = [
+    { label: 'Engagements', state: engagementsState },
+    { label: 'Candidatures', state: candidaturesState },
+    { label: 'Réservations', state: reservationsState },
+    { label: 'Partenaires', state: partenairesState },
+    { label: 'Newsletter', state: abonnesState },
+    { label: 'Audience', state: pageViewsState },
+    { label: 'Programme', state: programState },
+  ]
+  const loading = sources.some(({ state }) => state.loading)
+  const errors = sources.filter(({ state }) => state.error)
+  const reloadAll = () => sources.forEach(({ state }) => state.reload())
 
   const input = { engagements, candidatures, reservations, partenaires, abonnes, pageViews }
   const kpis = buildKpis(input)
@@ -101,15 +123,34 @@ export default function Dashboard() {
     { label: 'Candidatures à étudier', count: candidatures.filter((c) => c.statut === 'soumis' || c.statut === 'en_revue').length, to: '/admin/candidatures' },
     { label: 'Réservations à confirmer', count: reservations.filter((r) => r.statut === 'demande' || r.statut === 'liste_attente').length, to: '/admin/reservations' },
   ]
+  const momentsForts = program.flatMap((day) =>
+    day.sessions.map((session) => ({ id: session.id, title: session.title, date: day.label, time: session.time })),
+  ).slice(0, 5)
 
   return (
     <div className="space-y-8">
       <PageHeader
         eyebrow="Vue d’ensemble"
         title="Tableau de bord"
-        description="L’activité de Peace Days Dubaï 2027 en un coup d’œil — engagements, candidatures, réservations et partenariats."
+        description={`L’activité de ${EVENT.name} ${EVENT.edition} — engagements, candidatures, réservations et partenariats.`}
       />
 
+      {loading ? (
+        <GlassPanel><LoadingState label="Chargement des données Supabase…" /></GlassPanel>
+      ) : errors.length > 0 ? (
+        <GlassPanel className="space-y-4 p-6">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-pd-sand">Certaines données n’ont pas pu être chargées</h2>
+            <ul className="mt-3 list-inside list-disc space-y-1 text-sm text-[#e08a83]">
+              {errors.map(({ label, state }) => <li key={label}>{label} : {state.error}</li>)}
+            </ul>
+          </div>
+          <button type="button" onClick={reloadAll} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-pd-sand">
+            Réessayer
+          </button>
+        </GlassPanel>
+      ) : (
+      <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {kpis.map((k) => (
           <StatCard key={k.key} kpi={k} />
@@ -123,7 +164,7 @@ export default function Dashboard() {
               <h2 className="font-display text-lg font-semibold text-pd-sand">Engagements pour la paix</h2>
               <p className="text-xs text-pd-sand-dim">14 derniers jours</p>
             </div>
-            <StatusPill tone="gold">Temps réel</StatusPill>
+            <StatusPill tone="gold">Données Supabase</StatusPill>
           </div>
           <BarChart data={serie} />
         </GlassPanel>
@@ -185,15 +226,17 @@ export default function Dashboard() {
           </Link>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {EXPERIENCES.map((x) => (
-            <div key={x.key} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-              <span className="text-xs font-semibold text-pd-gold-soft">{x.no}</span>
-              <p className="mt-1 font-display text-sm font-semibold text-pd-sand">{x.title}</p>
-              <p className="mt-0.5 text-xs text-pd-sand-dim">{x.dates}</p>
+          {momentsForts.map((session) => (
+            <div key={session.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+              <span className="text-xs font-semibold text-pd-gold-soft">{session.date} · {session.time}</span>
+              <p className="mt-1 font-display text-sm font-semibold text-pd-sand">{session.title}</p>
             </div>
           ))}
+          {momentsForts.length === 0 && <p className="text-sm text-pd-sand-dim">Aucun temps fort au programme.</p>}
         </div>
       </GlassPanel>
+      </>
+      )}
     </div>
   )
 }

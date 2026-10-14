@@ -24,9 +24,11 @@ function Loader() {
 
 /** Garde d'accès : redirige vers /admin/login tant qu'aucune session Supabase. */
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { session, ready } = useAuthSession()
+  const { session, isAdmin, ready, error } = useAuthSession()
   if (!ready) return <Loader />
   if (!session) return <Navigate to="/admin/login" replace />
+  if (error) return <Navigate to="/admin/login" replace />
+  if (!isAdmin) return <Navigate to="/admin/login" replace />
   return <>{children}</>
 }
 

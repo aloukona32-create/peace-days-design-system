@@ -282,8 +282,8 @@ export async function getVoixPubliees(limit = 12): Promise<VoixPubliee[]> {
 }
 
 // ---- Audience (page_views) : lecture réelle, admin uniquement --------------
-//   La table est créée par supabase/03_analytics.sql. Tant qu'elle n'existe
-//   pas, on renvoie [] (0 vue) plutôt que de casser le tableau de bord.
+//   La table est créée par supabase/03_analytics.sql. Une erreur de schéma ou
+//   de droits est remontée à l'interface au lieu d'être présentée comme 0 vue.
 
 export interface PageView { createdAt: string; visitorId: string; path: string }
 
@@ -295,7 +295,6 @@ export async function getPageViews(sinceDays = 30): Promise<PageView[]> {
     .gte('created_at', since)
     .order('created_at', { ascending: false })
   if (error) {
-    if ((error as { code?: string }).code === 'PGRST205') return [] // table pas encore migrée
     throw error
   }
   return (data ?? []) as PageView[]

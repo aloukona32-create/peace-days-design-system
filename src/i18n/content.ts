@@ -1,6 +1,7 @@
 import type { Locale } from './config'
 import { useLocale } from './LocaleProvider'
 import * as FR from '../lib/content'
+import { useSiteSettings } from '../lib/siteSettings'
 import type {
   NavItem, Experience, Role, Value, Expertise, Reference, Guest, GalleryItem, Stat, ProgramDay, SessionType, TypeCompte,
 } from '../lib/content'
@@ -54,5 +55,17 @@ export function getContent(locale: Locale): ContentBundle {
 
 /** Contenu localisé pour la locale courante. */
 export function useContent(): ContentBundle {
-  return getContent(useLocale().locale)
+  const bundle = getContent(useLocale().locale)
+  const { settings } = useSiteSettings()
+  return {
+    ...bundle,
+    EVENT: {
+      ...bundle.EVENT,
+      name: settings.eventName,
+      edition: settings.edition,
+      datesLabel: settings.datesLabel,
+      location: settings.location,
+      tagline: settings.tagline,
+    },
+  }
 }

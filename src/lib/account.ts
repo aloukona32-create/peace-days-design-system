@@ -108,8 +108,9 @@ export async function updateMyProfile(patch: ProfilPatch): Promise<void> {
   const { data: auth } = await supabase.auth.getUser()
   const uid = auth.user?.id
   if (!uid) throw new Error('Non connecté.')
-  const { error } = await supabase.from('profiles').update(patch).eq('id', uid)
+  const { data, error } = await supabase.from('profiles').update(patch).eq('id', uid).select('id').maybeSingle()
   if (error) throw error
+  if (!data) throw new Error('Le profil n’a pas été modifié. Vérifiez les droits et réessayez.')
 }
 
 /** Traduit les erreurs Supabase Auth en messages FR lisibles. */

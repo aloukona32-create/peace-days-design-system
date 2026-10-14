@@ -3,6 +3,9 @@
 --
 --  À exécuter APRÈS schema.sql, dans : Supabase → SQL Editor → Run.
 --  Réexécutable sans erreur (create ... if not exists / drop policy avant create).
+--  Après exécution, l'accès admin est piloté par `profiles.is_admin`.
+--  Pour promouvoir un compte : mettre cette colonne à true dans le profil
+--  correspondant (ou via `public.set_profile_admin` si un admin est connecté).
 --
 --  SÉCURITÉ — MOTS DE PASSE : ils ne sont JAMAIS stockés ici. Supabase Auth
 --  les conserve, hachés (bcrypt), dans `auth.users.encrypted_password`. La
@@ -31,6 +34,68 @@ create table if not exists public.profiles (
 
 create index if not exists profiles_pays_idx on public.profiles (pays);
 create index if not exists profiles_type_idx on public.profiles (type_compte);
+
+-- L'ancienne table est temporairement lue pour migrer les admins existants.
+do $$
+begin
+  if to_regclass('public.admins') is not null then
+    alter table public.admins add column if not exists actif boolean not null default true;
+  end if;
+end;
+$$;
+
+-- Crée les profils manquants pour les comptes déjà présents avant l'installation
+-- du trigger. Les métadonnées publiques ne peuvent jamais définir is_admin.
+insert into public.profiles (id, prenom, nom, telephone, pays, organisation, fonction, type_compte, newsletter)
+select
+  u.id,
+  u.raw_user_meta_data->>'prenom',
+  u.raw_user_meta_data->>'nom',
+  u.raw_user_meta_data->>'telephone',
+  u.raw_user_meta_data->>'pays',
+  u.raw_user_meta_data->>'organisation',
+  u.raw_user_meta_data->>'fonction',
+  case
+    when u.raw_user_meta_data->>'type_compte' in ('visiteur','exposant','partenaire','media')
+      then u.raw_user_meta_data->>'type_compte'
+    else 'visiteur'
+  end,
+  case
+    when lower(u.raw_user_meta_data->>'newsletter') in ('true','false')
+      then (u.raw_user_meta_data->>'newsletter')::boolean
+    else false
+  end
+from auth.users u
+on conflict (id) do nothing;
+
+-- ---- Droit d'administration dans le profil ----
+-- Copie les admins existants une seule fois au moment de l'ajout de la colonne,
+-- afin qu'une réexécution ne réactive pas un admin désactivé depuis.
+do $$
+begin
+  if not exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'profiles'
+      and column_name = 'is_admin'
+  ) then
+    alter table public.profiles
+      add column is_admin boolean not null default false;
+
+    if to_regclass('public.admins') is not null then
+      update public.profiles p
+      set is_admin = true
+      from public.admins a
+      where a.user_id = p.id
+        and a.actif;
+    end if;
+  end if;
+end;
+$$;
+
+create index if not exists profiles_is_admin_idx
+  on public.profiles (id) where is_admin;
 
 -- ---- updated_at automatique ----
 create or replace function public.touch_updated_at()
@@ -62,12 +127,20 @@ begin
     new.raw_user_meta_data->>'pays',
     new.raw_user_meta_data->>'organisation',
     new.raw_user_meta_data->>'fonction',
-    coalesce(new.raw_user_meta_data->>'type_compte', 'visiteur'),
-    coalesce((new.raw_user_meta_data->>'newsletter')::boolean, false)
+    case
+      when new.raw_user_meta_data->>'type_compte' in ('visiteur','exposant','partenaire','media')
+        then new.raw_user_meta_data->>'type_compte'
+      else 'visiteur'
+    end,
+    case
+      when lower(new.raw_user_meta_data->>'newsletter') in ('true','false')
+        then (new.raw_user_meta_data->>'newsletter')::boolean
+      else false
+    end
   )
   on conflict (id) do nothing;
 
-  if coalesce((new.raw_user_meta_data->>'newsletter')::boolean, false) then
+  if lower(new.raw_user_meta_data->>'newsletter') = 'true' then
     insert into public.abonnes (email, langue, source)
     values (new.email, 'FR', 'inscription-compte')
     on conflict (email) do nothing;
@@ -83,7 +156,20 @@ create trigger on_auth_user_created after insert on auth.users
 -- ---- RLS profils : chacun voit/édite le sien ; les admins voient tout ----
 alter table public.profiles enable row level security;
 grant usage on schema public to anon, authenticated;
-grant select, insert, update on public.profiles to authenticated;
+grant select on public.profiles to authenticated;
+
+-- `is_admin` n'est jamais modifiable directement via le client. Les autres
+-- colonnes sont attribuées explicitement afin qu'un membre ne puisse pas se
+-- promouvoir en insérant ou modifiant son propre profil.
+revoke insert, update on public.profiles from authenticated;
+grant insert (
+  id, prenom, nom, telephone, pays, organisation, fonction, type_compte,
+  interets, bio, newsletter, avatar_url
+) on public.profiles to authenticated;
+grant update (
+  prenom, nom, telephone, pays, organisation, fonction, type_compte,
+  interets, bio, newsletter, avatar_url
+) on public.profiles to authenticated;
 
 drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
@@ -101,17 +187,7 @@ create policy profiles_update on public.profiles
   using (id = auth.uid() or public.is_admin())
   with check (id = auth.uid() or public.is_admin());
 
--- ============================================================
---  Enrichissement de la table `admins` (additif, sans casser l'existant)
---  Rôles à deux niveaux + activation/désactivation d'un compte admin.
--- ============================================================
-alter table public.admins add column if not exists nom               text;
-alter table public.admins add column if not exists role              text not null default 'admin';
-alter table public.admins add column if not exists actif             boolean not null default true;
-alter table public.admins add column if not exists derniere_connexion timestamptz;
-
---  is_admin() ne reconnaît plus qu'un admin ACTIF (les lignes existantes ont
---  actif = true par défaut, donc l'accès en place n'est pas interrompu).
+-- ---- is_admin() : source d'autorité unique = profiles.is_admin ----
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -119,22 +195,47 @@ stable
 security definer
 set search_path = public
 as $$
-  select exists (
-    select 1 from public.admins
-    where user_id = auth.uid() and actif
-  );
+  select coalesce((
+    select p.is_admin
+    from public.profiles p
+    where p.id = auth.uid()
+  ), false);
 $$;
 
--- ---- Confort : trace la dernière connexion d'un admin (appel optionnel) ----
-create or replace function public.touch_admin_login()
-returns void language sql security definer set search_path = public as $$
-  update public.admins set derniere_connexion = now() where user_id = auth.uid();
+-- Permet aux admins de gérer ce droit depuis un client authentifié, sans
+-- accorder de mise à jour directe de la colonne protégée.
+create or replace function public.set_profile_admin(target_user_id uuid, admin_enabled boolean)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Seuls les admins peuvent modifier le rôle administrateur.';
+  end if;
+
+  update public.profiles
+  set is_admin = admin_enabled
+  where id = target_user_id;
+
+  if not found then
+    raise exception 'Profil introuvable.';
+  end if;
+end;
 $$;
+
+revoke all on function public.set_profile_admin(uuid, boolean) from public, anon;
+grant execute on function public.set_profile_admin(uuid, boolean) to authenticated;
+
+-- ---- Retrait de l'ancienne liste d'admins après migration ----
+drop function if exists public.touch_admin_login();
+drop table if exists public.admins;
 
 -- ============================================================
 --  Rappel : un compte membre = une ligne auth.users + profiles (créé auto).
---  Un compte ADMIN = en plus, une ligne dans `admins` (voir schema.sql).
---  Le rôle recommandé : 'superadmin' | 'admin' | 'editeur' (libre, non contraint).
+--  L'ancienne table `admins` est migrée puis supprimée ; l'accès est désormais
+--  exclusivement défini par profiles.is_admin.
 -- ============================================================
 
 -- ============================================================

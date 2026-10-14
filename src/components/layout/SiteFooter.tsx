@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useContent } from '../../i18n/content'
 import { useT } from '../../i18n/useT'
+import { useSiteSettings } from '../../lib/siteSettings'
 import { Reveal, GoldLine, Magnetic } from '../motion'
 import { GoldButton } from '../ui/GoldButton'
 import { NewsletterForm } from '../site/NewsletterForm'
@@ -8,6 +9,7 @@ import { NewsletterForm } from '../site/NewsletterForm'
 export function SiteFooter() {
   const { EVENT, NAV } = useContent()
   const { t } = useT()
+  const { settings } = useSiteSettings()
   const CONTACT = [
     { label: t('footer.cOrg'), value: EVENT.organizer },
     { label: t('footer.cEdition'), value: `${EVENT.name} · ${EVENT.edition}` },
@@ -89,6 +91,16 @@ export function SiteFooter() {
                   <dd className="mt-0.5 text-sm text-pd-sand">{c.value}</dd>
                 </div>
               ))}
+              {settings.contactEmail && (
+                <div>
+                  <dt className="text-[0.7rem] uppercase tracking-wide text-pd-sand-dim/70">E-mail</dt>
+                  <dd className="mt-0.5 text-sm text-pd-sand">
+                    <a className="hover:text-pd-gold-bright" href={`mailto:${settings.contactEmail}`}>
+                      {settings.contactEmail}
+                    </a>
+                  </dd>
+                </div>
+              )}
             </dl>
           </Reveal>
         </div>

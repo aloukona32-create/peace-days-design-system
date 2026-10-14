@@ -6,7 +6,7 @@ import { useAuthSession } from '../useAuthSession'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const { session, ready } = useAuthSession()
+  const { session, isAdmin, ready, error: accessError } = useAuthSession()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
@@ -15,8 +15,8 @@ export default function AdminLogin() {
 
   // Déjà connecté → on file directement au tableau de bord.
   useEffect(() => {
-    if (ready && session) navigate('/admin', { replace: true })
-  }, [ready, session, navigate])
+    if (ready && session && isAdmin) navigate('/admin', { replace: true })
+  }, [ready, session, isAdmin, navigate])
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -28,7 +28,11 @@ export default function AdminLogin() {
       setError('Identifiants invalides. Vérifiez votre e-mail et votre mot de passe.')
       return
     }
-    navigate('/admin', { replace: true })
+  }
+
+  const signOut = async () => {
+    const { error: signOutError } = await supabase.auth.signOut()
+    if (signOutError) setError('La déconnexion a échoué. Réessayez.')
   }
 
   return (
@@ -87,13 +91,25 @@ export default function AdminLogin() {
             </div>
           </label>
 
-          <div className="flex items-center justify-between text-xs">
-            <label className="inline-flex items-center gap-2 text-pd-sand-dim">
-              <input type="checkbox" defaultChecked className="h-3.5 w-3.5 rounded border-white/20 bg-white/5 accent-pd-gold-bright" />
-              Se souvenir de moi
-            </label>
-            <button type="button" className="text-pd-gold-soft transition-colors hover:text-pd-gold-bright">Mot de passe oublié ?</button>
-          </div>
+          {accessError && (
+            <div role="alert" className="space-y-3 rounded-xl border border-pd-rose/40 bg-pd-rose/15 px-3 py-2.5 text-xs text-[#e08a83]">
+              <p>{accessError}</p>
+              {session && (
+                <button type="button" onClick={() => void signOut()} className="font-semibold underline underline-offset-2">
+                  Se déconnecter
+                </button>
+              )}
+            </div>
+          )}
+
+          {session && ready && !accessError && !isAdmin && (
+            <div role="alert" className="space-y-3 rounded-xl border border-pd-rose/40 bg-pd-rose/15 px-3 py-2.5 text-xs text-[#e08a83]">
+              <p>Ce compte est connecté, mais n’a pas accès à l’administration. Faites activer `is_admin` sur son profil.</p>
+              <button type="button" onClick={() => void signOut()} className="font-semibold underline underline-offset-2">
+                Se déconnecter
+              </button>
+            </div>
+          )}
 
           {error && (
             <div className="flex items-start gap-2 rounded-xl border border-pd-rose/40 bg-pd-rose/15 px-3 py-2.5 text-xs text-[#e08a83]">
