@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { Layout, PageTransition } from './components/layout'
 import { useSession } from './lib/useSession'
+import { useDeploymentRefresh } from './lib/useDeploymentRefresh'
 
 // Importateurs de chunk conservés pour le préchargement (usePreloadRoutes) :
 // `lazy()` et le préchargement partagent la MÊME fonction, donc le même chunk.
@@ -97,6 +98,7 @@ function AnimatedRoutes() {
 export default function App() {
   const location = useLocation()
   usePreloadRoutes()
+  useDeploymentRefresh()
 
   // Le back-office vit sur /admin : pas de Layout public (ni header, footer, Lenis ou ThemeLab).
   if (location.pathname.startsWith('/admin')) {

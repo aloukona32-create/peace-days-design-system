@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VITE_BASE_PATH: /peace-days-design-system/
+      VITE_BUILD_ID: ${{ github.sha }}
       VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
       VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
     steps:
@@ -49,6 +50,9 @@ jobs:
 
       - name: Build site
         run: npm run build
+
+      - name: Write deployment version
+        run: printf '{"version":"%s"}\n' "$GITHUB_SHA" > dist/version.json
 
       - name: Preserve client-side routes
         run: cp dist/index.html dist/404.html
